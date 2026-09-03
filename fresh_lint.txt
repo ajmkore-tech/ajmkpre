@@ -1,0 +1,30 @@
+
+> react-example@0.0.0 lint
+> tsc --noEmit
+
+src/pages/Sales.tsx(451,33): error TS1005: '}' expected.
+src/pages/Sales.tsx(451,112): error TS1005: '...' expected.
+src/pages/Sales.tsx(451,217): error TS1003: Identifier expected.
+src/pages/Sales.tsx(456,40): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,45): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,58): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,64): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,69): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,76): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,89): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,96): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+src/pages/Sales.tsx(456,100): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,110): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,117): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,127): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,142): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,143): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,163): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,170): error TS1005: ',' expected.
+src/pages/Sales.tsx(456,173): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(456,174): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(473,16): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(476,9): error TS1005: ')' expected.
+src/pages/Sales.tsx(633,7): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(643,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(644,3): error TS1109: Expression expected.

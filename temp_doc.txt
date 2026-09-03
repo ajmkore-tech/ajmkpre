@@ -1,0 +1,274 @@
+  const generateNotaDespacho = (sale: Sale) => {
+    const isNota = sale.tipoDocumento === 'Nota de Despacho';
+    
+    if (isNota) {
+      const doc = new jsPDF();
+      const companyName = companyConfig.nombre || 'Empresa';
+      const companyRif = companyConfig.rif || 'J-00000000';
+      const title = 'NOTA DE DESPACHO';
+      const numSeq = sale.numeroDocumento ? parseInt(sale.numeroDocumento) : sequencesConfig.notaDespacho;
+      
+      // Header Left
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(companyName, 14, 20);
+      
+      doc.setFontSize(10);
+      doc.text(companyRif, 14, 26);
+      
+      // Header Right
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title + ' NRO.: ' + numSeq.toString().padStart(7, '0'), 195, 20, { align: 'right' });
+      
+      // Details
+      doc.setFontSize(9);
+      
+      // Left Client
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Cliente:`, 14, 35);
+      doc.setFont('helvetica', 'normal');
+      doc.text(sale.clienteNombre, 30, 35);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Dirección:`, 14, 40);
+      doc.setFont('helvetica', 'normal');
+      const fullDir = clients.find(c => c.id === sale.clienteId)?.direccion || 'N/A';
+      doc.text(fullDir, 32, 40, { maxWidth: 85 });
+      
+      // Right Details
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Fecha Emisión:`, 140, 35);
+      doc.setFont('helvetica', 'normal');
+      const fechaEmision = new Date(sale.fecha).toLocaleDateString('es-VE');
+      doc.text(fechaEmision, 165, 35);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(`R.I.F.:`, 140, 40);
+      doc.setFont('helvetica', 'normal');
+      doc.text(clients.find(c => c.id === sale.clienteId)?.rif || sale.clienteId, 155, 40);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Condición de Pago:`, 14, 45);
+      doc.setFont('helvetica', 'normal');
+      doc.text(sale.condicionPago, 45, 45);
+
+      const clientPhone = clients.find(c => c.id === sale.clienteId)?.telefono || '';
+      if(clientPhone) {
+         doc.setFont('helvetica', 'bold');
+         doc.text(`Teléfonos:`, 140, 45);
+         doc.setFont('helvetica', 'normal');
+         doc.text(clientPhone, 160, 45);
+      }
+      
+      // Items
+      const tableData = sale.items.map(item => [
+        item.codigo,
+        item.detalle,
+        item.marca || '',
+        item.cantidad,
+        `${item.precio.toFixed(2)}`,
+        `${item.total.toFixed(2)}`
+      ]);
+
+      autoTable(doc, {
+        startY: 55,
+        head: [['Codigo', 'Descripción', 'Marca', 'Cantidad', 'Precio Unitario', 'Neto']],
+        body: tableData,
+        theme: 'plain',
+        styles: { fontSize: 8, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.5 },
+        columnStyles: {
+          3: { halign: 'center' },
+          4: { halign: 'right' },
+          5: { halign: 'right' }
+        }
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY || 55;
+      
+      // Bottom Left
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Dirección de Entrega:`, 14, finalY + 15);
+      doc.text(`Orden de Compra:`, 14, finalY + 25);
+      
+      // Bottom Right (Total)
+      doc.setFontSize(11);
+      doc.text(`Total a Pagar USD:`, 120, finalY + 15);
+      doc.text(`${sale.total.toFixed(2)}`, 160, finalY + 15);
+
+      const totalAbonado = receipts.filter(r => r.asignaciones.some(a => a.id === sale.id)).reduce((acc, r) => {
+          const asig = r.asignaciones.find(a => a.id === sale.id);
+          return acc + (asig ? asig.amount : 0);
+      }, 0);
+      const pendiente = sale.total - totalAbonado;
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Monto Cancelado: ${totalAbonado.toFixed(2)}`, 120, finalY + 22);
+      doc.text(`Monto Pendiente: ${pendiente.toFixed(2)}`, 120, finalY + 27);
+
+      if (companyConfig.firma) {
+        doc.addImage(companyConfig.firma, 'PNG', 100, finalY + 30, 40, 20, '', 'FAST');
+      }
+
+      doc.save(`Nota_Despacho_${numSeq}.pdf`);
+      
+      if (!sale.numeroDocumento) {
+        const docNum = numSeq.toString();
+        setSales(prev => prev.map(s => s.id === sale.id ? { ...s, numeroDocumento: docNum } : s));
+        setSequencesConfig(prev => ({...prev, notaDespacho: prev.notaDespacho + 1}));
+        if (selectedSale?.id === sale.id) {
+          setSelectedSale({...sale, numeroDocumento: docNum});
+        }
+      }
+
+    } else {
+      // FACTURA PDF Layout
+      const doc = new jsPDF();
+      const numSeq = sale.numeroDocumento ? parseInt(sale.numeroDocumento) : sequencesConfig.factura;
+      const appliedRateName = sale.tipoPrecio === 'Minorista' ? minoristaRate : activeRate;
+      const appliedRateValue = sale.tasaAplicada || rates[appliedRateName.toLowerCase() as 'bcv' | 'eur'] || 1;
+
+      const formatBsNumber = (num: number) => {
+        return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+      };
+
+      // Title
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`FACTURA NRO.: ${numSeq.toString().padStart(5, '0')}`, 195, 20, { align: 'right' });
+
+      // Razón Social & Fecha
+      doc.setFontSize(9);
+      doc.text('Razón Social:', 14, 30);
+      doc.setFont('helvetica', 'normal');
+      doc.text(sale.clienteNombre, 38, 30);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fecha:', 195, 30, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date(sale.fecha).toLocaleDateString('es-VE'), 180, 30, { align: 'right' });
+
+      // Dirección
+      doc.setFont('helvetica', 'bold');
+      doc.text('Dirección:', 14, 36);
+      doc.setFont('helvetica', 'normal');
+      const fullDir = clients.find(c => c.id === sale.clienteId)?.direccion || 'N/A';
+      doc.text(fullDir, 32, 36, { maxWidth: 160 });
+
+      // RIF / NIT / Orden
+      doc.setFont('helvetica', 'bold');
+      doc.text('RIF:', 14, 42);
+      doc.setFont('helvetica', 'normal');
+      doc.text(clients.find(c => c.id === sale.clienteId)?.rif || sale.clienteId, 22, 42);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('NIT:', 100, 42, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Orden De Compra:', 195, 42, { align: 'right' });
+
+      // Forma Pago & Condiciones
+      doc.setFont('helvetica', 'bold');
+      doc.text('Forma de Pago:', 14, 48);
+      doc.setFont('helvetica', 'normal');
+      
+      const receipt = receipts.find(r => r.asignaciones.some(a => a.id === sale.id));
+      const formaPagoStr = receipt ? 'Transferencia Bancaria' : 'Transferencia Bancaria';
+      doc.text(formaPagoStr, 40, 48);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Condiciones De Pago:', 195, 48, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.text(sale.condicionPago, 160, 48, { align: 'right' });
+
+      // Divider line
+      doc.setLineWidth(0.2);
+      doc.line(14, 52, 195, 52);
+
+      // Items Table in Bs
+      const tableData = sale.items.map((item, idx) => [
+        (idx + 1).toString(),
+        (item.cantidad || 0).toString(),
+        item.detalle || '',
+        '', // NRO. GUIA
+        formatBsNumber((item.precio || 0) * appliedRateValue),
+        formatBsNumber((item.total || 0) * appliedRateValue)
+      ]);
+
+      autoTable(doc, {
+        startY: 55,
+        head: [['ITEM', 'CANT', 'DESCRIPCION', 'NRO.\nGUIA', 'P/UNITARIO\nBs.', 'TOTAL BS.']],
+        body: tableData,
+        theme: 'plain',
+        styles: { fontSize: 8, textColor: [0, 0, 0], cellPadding: 2 },
+        headStyles: { fontStyle: 'bold', halign: 'center', valign: 'middle' },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 15 },
+          1: { halign: 'center', cellWidth: 15 },
+          2: { halign: 'left', cellWidth: 'auto' },
+          3: { halign: 'center', cellWidth: 20 },
+          4: { halign: 'right', cellWidth: 35 },
+          5: { halign: 'right', cellWidth: 35 }
+        }
+      });
+
+      let finalY = (doc as any).lastAutoTable.finalY || 55;
+      
+      // Ensure footer stays at bottom if table is small
+      if (finalY < 180) finalY = 180;
+
+      // Divider line before footer
+      doc.line(14, finalY + 5, 195, finalY + 5);
+
+      // Footer left: Observaciones
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Observaciones:', 14, finalY + 10);
+      doc.setFont('helvetica', 'normal');
+      const obsText = `La tasa utilizada para la emisión de\nesta factura es (Bs/USD ${formatBsNumber(appliedRateValue)}) de\nfecha ${new Date().toLocaleDateString('es-VE')}.\nSegún Gaceta Oficial no. 6405\nconvenio cambiario no. 01 de fecha\n07/09/2018.`;
+      doc.text(obsText, 14, finalY + 15);
+
+      // Footer right: Totals
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      const totalBs = sale.total * appliedRateValue;
+
+      doc.text('SUB - TOTAL Bs.', 140, finalY + 15, { align: 'right' });
+      doc.text(formatBsNumber(totalBs), 195, finalY + 15, { align: 'right' });
+
+      doc.text('TOTAL EXENTOS Bs.', 140, finalY + 22, { align: 'right' });
+      doc.text(formatBsNumber(totalBs), 195, finalY + 22, { align: 'right' });
+
+      doc.text('IVA 16% SOBRE 0,00', 140, finalY + 29, { align: 'right' });
+      doc.text('0,00', 195, finalY + 29, { align: 'right' });
+
+      // Bold line for total
+      doc.setLineWidth(0.5);
+      doc.line(90, finalY + 33, 195, finalY + 33);
+
+      doc.setFontSize(10);
+      doc.text('TOTAL A PAGAR Bs.', 140, finalY + 38, { align: 'right' });
+      doc.text(formatBsNumber(totalBs), 195, finalY + 38, { align: 'right' });
+      doc.setLineWidth(0.2); // reset
+
+      // Bottom Note
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      const bottomNote = "Todo pago recibido en moneda distinta a la de curso legal en el país estará sujeto a la alícuota del 3% del IGTF sobre el monto de dicho pago, dando así cumplimiento a las providencias (SNAT/2022/000013) publicada en GO 42.339 y a la Reforma de la Ley del I.G.T.F. publicada el 25/02/2022 GO N° 6.687 extraordinaria.";
+      const splitNote = doc.splitTextToSize(bottomNote, 180);
+      doc.text(splitNote, 14, finalY + 48);
+
+      doc.save(`Factura_${numSeq.toString().padStart(5, '0')}.pdf`);
+      
+      if (!sale.numeroDocumento) {
+        const docNum = numSeq.toString();
+        setSales(prev => prev.map(s => s.id === sale.id ? { ...s, numeroDocumento: docNum } : s));
+        setSequencesConfig(prev => ({...prev, factura: prev.factura + 1}));
+        if (selectedSale?.id === sale.id) {
+          setSelectedSale({...sale, numeroDocumento: docNum});
+        }
+      }
+    }

@@ -1,0 +1,3 @@
+sed -i '/case '"'"'Recibido'"'"': return/a \      case '"'"'Pendiente por pagar'"'"': return '"'"'bg-orange-100 text-orange-800 border-orange-200'"'"';' src/pages/Sales.tsx
+sed -i '/case '"'"'Recibido'"'"': return <User className="w-3 h-3" \/>;/a \      case '"'"'Pendiente por pagar'"'"': return <Clock className="w-3 h-3" \/>;' src/pages/Sales.tsx
+sed -i '/if (sale.estado === '"'"'Recibido'"'"') return '"'"'Marcar Cobrado'"'"';/c \    if (sale.estado === '"'"'Recibido'"'"') { return sale.condicionPago === '"'"'Crédito'"'"' ? '"'"'Marcar Pendiente por pagar'"'"' : '"'"'Marcar Cobrado'"'"'; }\n    if (sale.estado === '"'"'Pendiente por pagar'"'"') return '"'"'Marcar Cobrado'"'"';' src/pages/Sales.tsx

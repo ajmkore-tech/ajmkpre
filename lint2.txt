@@ -1,0 +1,94 @@
+
+> react-example@0.0.0 lint
+> tsc --noEmit
+
+src/pages/Sales.tsx(153,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(169,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(180,6): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(215,1): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(283,34): error TS1005: '}' expected.
+src/pages/Sales.tsx(283,69): error TS1003: Identifier expected.
+src/pages/Sales.tsx(291,31): error TS1005: '}' expected.
+src/pages/Sales.tsx(476,16): error TS1005: '}' expected.
+src/pages/Sales.tsx(488,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(491,7): error TS1109: Expression expected.
+src/pages/Sales.tsx(491,41): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(492,9): error TS1109: Expression expected.
+src/pages/Sales.tsx(493,11): error TS1109: Expression expected.
+src/pages/Sales.tsx(495,22): error TS1005: '}' expected.
+src/pages/Sales.tsx(501,78): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(501,180): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(510,80): error TS1005: '}' expected.
+src/pages/Sales.tsx(512,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(513,7): error TS1109: Expression expected.
+src/pages/Sales.tsx(518,32): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(518,52): error TS1005: '}' expected.
+src/pages/Sales.tsx(518,71): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(521,11): error TS1005: '}' expected.
+src/pages/Sales.tsx(524,26): error TS1005: '}' expected.
+src/pages/Sales.tsx(524,71): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(532,74): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(532,176): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(537,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(541,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(545,55): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(546,23): error TS1005: '}' expected.
+src/pages/Sales.tsx(550,43): error TS1003: Identifier expected.
+src/pages/Sales.tsx(551,59): error TS1005: '}' expected.
+src/pages/Sales.tsx(553,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(556,7): error TS1109: Expression expected.
+src/pages/Sales.tsx(556,52): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(557,151): error TS1005: '}' expected.
+src/pages/Sales.tsx(560,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(561,7): error TS1109: Expression expected.
+src/pages/Sales.tsx(561,22): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(562,86): error TS1005: '}' expected.
+src/pages/Sales.tsx(565,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(568,20): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(568,34): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(569,7): error TS1109: Expression expected.
+src/pages/Sales.tsx(572,9): error TS1109: Expression expected.
+src/pages/Sales.tsx(573,11): error TS1109: Expression expected.
+src/pages/Sales.tsx(574,33): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(575,13): error TS1109: Expression expected.
+src/pages/Sales.tsx(575,61): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(576,27): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(577,15): error TS1109: Expression expected.
+src/pages/Sales.tsx(580,26): error TS1005: '}' expected.
+src/pages/Sales.tsx(586,11): error TS1109: Expression expected.
+src/pages/Sales.tsx(587,33): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(588,13): error TS1109: Expression expected.
+src/pages/Sales.tsx(588,61): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(589,27): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(593,9): error TS1005: ',' expected.
+src/pages/Sales.tsx(602,17): error TS1005: '}' expected.
+src/pages/Sales.tsx(606,51): error TS1005: '}' expected.
+src/pages/Sales.tsx(606,162): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(610,39): error TS1005: '}' expected.
+src/pages/Sales.tsx(616,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(621,96): error TS1005: '}' expected.
+src/pages/Sales.tsx(622,5): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(623,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(700,33): error TS1005: '}' expected.
+src/pages/Sales.tsx(700,112): error TS1005: '...' expected.
+src/pages/Sales.tsx(700,217): error TS1003: Identifier expected.
+src/pages/Sales.tsx(705,40): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,45): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,58): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,64): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,69): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,76): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,89): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,96): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+src/pages/Sales.tsx(705,100): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,110): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,117): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,127): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,142): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,143): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,163): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,170): error TS1005: ',' expected.
+src/pages/Sales.tsx(705,173): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(705,174): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(722,16): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(895,1): error TS1005: '}' expected.

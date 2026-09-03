@@ -1,0 +1,18 @@
+const getStatusColor = (status: SaleStatus) => {
+    switch (status) {
+      case 'Registrado/Cotizacion': return 'text-gray-600 border-gray-200 bg-gray-50';
+      case 'Confirmado': return 'text-blue-600 border-blue-200 bg-blue-50';
+      case 'Entregado': return 'text-purple-600 border-purple-200 bg-purple-50';
+      case 'Cerrado': return 'text-green-600 border-green-200 bg-green-50';
+      default: return 'text-gray-600 border-gray-200 bg-gray-50';
+    }
+  };
+const getStatusIcon = (status: SaleStatus) => {
+    switch (status) {
+      case 'Registrado/Cotizacion': return <FileText className="w-3 h-3" />;
+      case 'Confirmado': return <CheckCircle2 className="w-3 h-3" />;
+      case 'Entregado': return <Truck className="w-3 h-3" />;
+      case 'Cerrado': return <DollarSign className="w-3 h-3" />;
+      default: return null;
+    }
+  };

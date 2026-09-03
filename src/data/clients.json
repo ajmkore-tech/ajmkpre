@@ -1,0 +1,102 @@
+[
+  {
+    "id": "12426982",
+    "razonSocial": "ANA MARIA CASTILLO",
+    "rif": "V12426982",
+    "direccion": "LOS GUAYOS, EDO. CARABOBO",
+    "telefono": "04125992158",
+    "tipoPrecio": "Mayorista",
+    "credito": true,
+    "diasCredito": 15
+  },
+  {
+    "id": "14025422",
+    "razonSocial": "MAGALLY YAUCA",
+    "rif": "V14025422",
+    "direccion": "SAN DIEGO, EDO. CARABOBO",
+    "telefono": "04244057376",
+    "tipoPrecio": "Minorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "17398274",
+    "razonSocial": "SINDY MADELEIN ORTA",
+    "rif": "V17398274",
+    "direccion": "SAN DIEGO",
+    "telefono": "04144356631",
+    "tipoPrecio": "Mayorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "19449630",
+    "razonSocial": "DARWIN SANCHEZ",
+    "rif": "V19449630",
+    "direccion": "LOS GUAYOS",
+    "telefono": "04127849652",
+    "tipoPrecio": "Minorista",
+    "credito": true,
+    "diasCredito": 15
+  },
+  {
+    "id": "21153785",
+    "razonSocial": "KAREN AGUANA",
+    "rif": "v21153785",
+    "direccion": "SAN DIEGO VALENCIA EDO. CARABOBO",
+    "telefono": "04123556727",
+    "tipoPrecio": "Mayorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "295568533",
+    "razonSocial": "INTER AUTO PREMIUM, C.A.",
+    "rif": "J295568533",
+    "direccion": "AV. VALENCIA CASA PARCELA 674 SECTOR FLORIDA CARABOBO",
+    "telefono": "(0241)8660044",
+    "tipoPrecio": "Minorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "297560572",
+    "razonSocial": "NAZARENO EXPRESS, C.A. (DR. ENCOMIENDA)",
+    "rif": "J297560572",
+    "direccion": "URB. RICARDO URRIERA, EDO. CARABOBO",
+    "telefono": "04149423055",
+    "tipoPrecio": "Mayorista",
+    "credito": true,
+    "diasCredito": 15
+  },
+  {
+    "id": "308097756",
+    "razonSocial": "ESPECIAL INQUIMIC, C.A.",
+    "rif": "J308097756",
+    "direccion": "SAN DIEGO, VALENCIA, EDO. CARABOBO",
+    "telefono": "(0241)8718424",
+    "tipoPrecio": "Minorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "001014535",
+    "razonSocial": "CAUCHOS Y ACCESORIOS LEMANS, C.A.",
+    "rif": "J001014535",
+    "direccion": "CARACAS",
+    "telefono": "0414-2750695",
+    "tipoPrecio": "Mayorista",
+    "credito": false,
+    "diasCredito": 0
+  },
+  {
+    "id": "001014536",
+    "razonSocial": "SERVI MAQUINAS VALENCIA 2011,C.A",
+    "rif": "J501548641",
+    "direccion": "VALENCIA",
+    "telefono": "0424-4674516",
+    "tipoPrecio": "Minorista",
+    "credito": true,
+    "diasCredito": 15
+  }
+]

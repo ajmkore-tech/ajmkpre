@@ -1,0 +1,644 @@
+     1	import React, { useState, useMemo, useRef, useEffect } from 'react';
+     2	import { useSearchParams } from 'react-router-dom';
+     3	import { Search, Plus, FileEdit, Trash2, CheckCircle2, Truck, DollarSign, ArrowRight, ArrowLeft, X, User, Clock, ChevronDown, Tag, MapPin, CreditCard, TrendingUp, FileText } from 'lucide-react';
+     4	import { useAppContext } from '../context/AppContext';
+     5	import { SaleStatus, SaleItem, Sale, Client, Product } from '../types';
+     6	import jsPDF from 'jspdf';
+     7	import autoTable from 'jspdf-autotable';
+     8	import Autocomplete from '../components/Autocomplete';
+     9	import { useDocumentGenerator } from '../hooks/useDocumentGenerator';
+    10	import NewOrderModal from '../components/NewOrderModal';
+    11	import CloseSaleModal from '../components/CloseSaleModal';
+    12	
+    13	
+    14	
+    15	
+    16	
+    17	
+    18	const canPrintDocument = (sale: Sale) => {
+    19	  return sale.estado === 'Cerrado';
+    20	};
+    21	
+    22	
+    23	
+    24	export default function Sales() {
+    25	
+    26	  const { generateDocument } = useDocumentGenerator();
+    27	  const { sales, setSales, clients, receipts, setClients, inventory, setInventory, userRole, formatBs, activeRate, minoristaRate, useSeparateMinoristaRate, rates, calculateBs, companyConfig, sequencesConfig, setSequencesConfig } = useAppContext();
+    28	  const canEditPrice = userRole.permissions.ventas.editarPrecio;
+    29	  const [activeTab, setActiveTab] = useState<SaleStatus | 'Todos'>('Todos');
+    30	  const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+    31	  const [closingSale, setClosingSale] = useState<Sale | null>(null);
+    32	  const [closingData, setClosingData] = useState({ tasa: rates[activeRate.toLowerCase() as 'bcv' | 'eur'] || 0, amountToPay: '', paymentMethod: '', reference: '' });
+    33	  const [closingError, setClosingError] = useState<string | null>(null);
+    34	  const [searchTerm, setSearchTerm] = useState('');
+    35	
+    36	  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+    37	  const [searchParams] = useSearchParams();
+    38	
+    39	  
+    40	
+    41	
+    42	  useEffect(() => {
+    43	    const pedidoId = searchParams.get('pedido');
+    44	    if (pedidoId && sales.length > 0) {
+    45	      const foundSale = sales.find(s => s.id === pedidoId);
+    46	      if (foundSale) {
+    47	        setSelectedSale(foundSale);
+    48	
+    49	      }
+    50	    }
+    51	  }, [searchParams, sales]);
+    52	
+    53	  // New Order Modal State
+    54	  const [isModalOpen, setIsModalOpen] = useState(false);
+    55	  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+    56	  const [orderClient, setOrderClient] = useState<Partial<Client>>({});
+    57	  const [orderItems, setOrderItems] = useState<any[]>(Array(7).fill({}));
+    58	  const [tipoUbicacion, setTipoUbicacion] = useState<'Local' | 'Externo'>('Local');
+    59	  const [condicionPago, setCondicionPago] = useState<'Contado' | 'Crédito'>('Contado');
+    60	  const [tipoPrecio, setTipoPrecio] = useState<'Mayorista' | 'Minorista'>('Minorista');
+    61	  const [orderRate, setOrderRate] = useState<number>(1);
+    62	  const [orderCurrency, setOrderCurrency] = useState<'BCV' | 'EUR'>('BCV');
+    63	
+    64	  useEffect(() => {
+    65	    if (!editingSaleId && isModalOpen) {
+    66	      const appliedRate = tipoPrecio === 'Minorista' ? minoristaRate : activeRate;
+    67	      setOrderCurrency(appliedRate as 'BCV' | 'EUR');
+    68	      const rateVal = rates[appliedRate.toLowerCase() as 'bcv' | 'eur'] || 1;
+    69	      setOrderRate(Number(rateVal.toFixed(2)));
+    70	    }
+    71	  }, [tipoPrecio, minoristaRate, activeRate, rates, editingSaleId, isModalOpen]);
+    72	  const [tipoDocumento, setTipoDocumento] = useState<'Nota de Despacho' | 'Factura'>('Nota de Despacho');
+    73	
+    74	  
+    75	
+    76	  const getDaysSince = (dateStr?: string) => {
+    77	    if (!dateStr) return '0 días';
+    78	    const past = new Date(dateStr);
+    79	    const today = new Date();
+    80	    past.setHours(0, 0, 0, 0);
+    81	    today.setHours(0, 0, 0, 0);
+    82	    
+    83	    const diffTime = today.getTime() - past.getTime();
+    84	    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    85	    if (diffDays === 0) return 'Hoy';
+    86	    if (diffDays === 1) return 'Ayer';
+    87	    if (diffDays < 0) return 'Hoy';
+    88	    return `Hace ${diffDays} días`;
+    89	  };
+    90	
+    91	  const normalizeSearch = (str: string) => {
+    92	    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    93	  };
+    94	
+    95	  const filteredSales = useMemo(() => {
+    96	    let result = sales;
+    97	    if (activeTab !== 'Todos') {
+    98	      result = result.filter(s => s.estado === activeTab);
+    99	    }
+   100	    if (searchTerm) {
+   101	      const lowerSearch = normalizeSearch(searchTerm);
+   102	      result = result.filter(s => 
+   103	        normalizeSearch(s.id).includes(lowerSearch) || 
+   104	        normalizeSearch(s.clienteNombre).includes(lowerSearch) ||
+   105	        (s.numeroDocumento && normalizeSearch(s.numeroDocumento).includes(lowerSearch))
+   106	      );
+   107	    }
+   108	    return result;
+   109	  }, [sales, activeTab, searchTerm]);
+   110	
+   111	
+   112	  const advanceStatus = (saleId: string) => {
+   113	    const sale = sales.find(s => s.id === saleId);
+   114	    if (!sale) return;
+   115	
+   116	    if (sale.estado === 'Registrado/Cotizacion') {
+   117	      const hasZeroPrice = sale.items.some(i => i.precioUnitario <= 0);
+   118	      if (hasZeroPrice) {
+   119	        alert("Atención: Hay productos en la orden sin precio de venta asignado ($0). Debe establecer un precio antes de confirmar el pedido.");
+   120	        return;
+   121	    }
+   122	
+   123	    const action = getNextStatusAction(sale);
+   124	    if (action === 'Cerrar Venta' || action === 'Entregar Venta') {
+   125	      setClosingSale(sale);
+   126	      const appliedRate = (sale.tipoPrecio === 'Minorista') ? minoristaRate : activeRate;
+   127	      const defaultTasa = sale.tasaAplicada ? sale.tasaAplicada : Number((appliedRate === 'BCV' ? rates.bcv : rates.eur).toFixed(2));
+   128	      setClosingData({ tasa: defaultTasa, amountToPay: sale.total.toFixed(2), paymentMethod: companyConfig?.paymentMethods?.[0]?.name || '', reference: '' });
+   129	      setIsClosingModalOpen(true);
+   130	      return;
+   131	    }
+   132	
+   133	    let finalUpdatedSale: Sale | null = null;
+   134	    
+   135	    setSales(prev => prev.map(s => {
+   136	      if (s.id === saleId) {
+   137	        let newStatus: SaleStatus = s.estado;
+   138	        
+   139	        if (s.estado === 'Registrado/Cotizacion') {
+   140	          newStatus = 'Confirmado';
+   141	          // Inventory: Increase stockComp, decrease stockDisp
+   142	          const updatedInventory = [...inventory];
+   143	          s.items.forEach(item => {
+   144	            const prodIndex = updatedInventory.findIndex(p => p.codigo === item.codigo);
+   145	            if (prodIndex >= 0) {
+   146	              const qtyToDeduct = item.esEmpaque ? item.cantidad : (item.cantidad / (item.unidadesPorEmpaque || 1));
+   147	              updatedInventory[prodIndex] = {
+   148	                ...updatedInventory[prodIndex],
+   149	                stockDisp: updatedInventory[prodIndex].stockDisp - qtyToDeduct,
+   150	                stockComp: (updatedInventory[prodIndex].stockComp || 0) + qtyToDeduct
+   151	              };
+   152	            }
+   153	          });
+   154	          setInventory(updatedInventory);
+   155	        } else if (s.estado === 'Confirmado') {
+   156	          newStatus = 'Entregado';
+   157	          // Inventory: Decrease stockComp
+   158	          const updatedInventory = [...inventory];
+   159	          s.items.forEach(item => {
+   160	            const prodIndex = updatedInventory.findIndex(p => p.codigo === item.codigo);
+   161	            if (prodIndex >= 0) {
+   162	              updatedInventory[prodIndex] = {
+   163	                ...updatedInventory[prodIndex],
+   164	                stockComp: Math.max(0, (updatedInventory[prodIndex].stockComp || 0) - item.cantidad)
+   165	              };
+   166	            }
+   167	          });
+   168	          setInventory(updatedInventory);
+   169	        }
+   170	        
+   171	        const updatedSale = { ...s, estado: newStatus, fechaEstado: new Date().toISOString() };
+   172	        finalUpdatedSale = updatedSale;
+   173	        if (selectedSale?.id === saleId) {
+   174	          setSelectedSale(updatedSale);
+   175	        }
+   176	        return updatedSale;
+   177	      }
+   178	      return s;
+   179	    }));
+   180	  };
+   181	
+   182	  const handleDeleteSale = (saleId: string) => {
+   183	    const saleToDelete = sales.find(s => s.id === saleId);
+   184	    if (!saleToDelete) return;
+   185	    if (saleToDelete.estado === 'Cerrado') {
+   186	      alert("No se puede eliminar un pedido que ya ha sido cerrado/cobrado.");
+   187	      return;
+   188	    }
+   189	    if (window.confirm("¿Estás seguro de eliminar este pedido? El inventario será devuelto.")) {
+   190	      const updatedInventory = [...inventory];
+   191	      
+   192	      saleToDelete.items.forEach(item => {
+   193	        const prodIndex = updatedInventory.findIndex(p => p.codigo === item.codigo);
+   194	        if (prodIndex >= 0) {
+   195	          if (saleToDelete.estado === 'Confirmado') {
+   196	            updatedInventory[prodIndex] = {
+   197	              ...updatedInventory[prodIndex],
+   198	              stockDisp: updatedInventory[prodIndex].stockDisp + item.cantidad,
+   199	              stockComp: Math.max(0, (updatedInventory[prodIndex].stockComp || 0) - item.cantidad)
+   200	            };
+   201	          } else if (saleToDelete.estado === 'Entregado') { 
+   202	             updatedInventory[prodIndex] = {
+   203	              ...updatedInventory[prodIndex],
+   204	              stockDisp: updatedInventory[prodIndex].stockDisp + item.cantidad
+   205	            };
+   206	          }
+   207	        }
+   208	      });
+   209	      setInventory(updatedInventory);
+   210	      
+   211	      // Remove sale
+   212	      setSales(sales.filter(s => s.id !== saleId));
+   213	      if (selectedSale?.id === saleId) {
+   214	        setSelectedSale(null);
+   215	      }
+   216	    }
+   217	  };
+   218	
+   219	  const handleSaveOrder = () => {
+   220	    const validItems = orderItems.filter(i => i.codigo && i.cantidad && i.precio);
+   221	    if (!orderClient.rif || validItems.length === 0) {
+   222	      alert("Por favor, ingrese cliente y al menos un producto.");
+   223	      return;
+   224	    }
+   225	
+   226	    if (orderClient.rif) {
+   227	      const existingClient = clients.find(c => c.rif === orderClient.rif);
+   228	      if (!existingClient) {
+   229	        const newClient: Client = {
+   230	          id: `CL-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+   231	          tipoCliente: orderClient.tipoCliente || 'V',
+   232	          rif: orderClient.rif,
+   233	          razonSocial: orderClient.razonSocial || 'CLIENTE NUEVO',
+   234	          direccion: orderClient.direccion || '',
+   235	          telefono: orderClient.telefono || '',
+   236	          tipoPrecio: tipoPrecio,
+   237	          credito: condicionPago === 'Crédito',
+   238	          diasCredito: 0
+   239	        };
+   240	        setClients([newClient, ...clients]);
+   241	      }
+   242	    }
+   243	
+   244	    if (editingSaleId) {
+   245	      const updatedSales = sales.map(s => {
+   246	        if (s.id === editingSaleId) {
+   247	          return {
+   248	            ...s,
+   249	            clienteId: orderClient.rif || '',
+   250	            clienteNombre: orderClient.razonSocial || 'CLIENTE NUEVO',
+   251	            tipoUbicacion,
+   252	            condicionPago,
+   253	            tipoPrecio,
+   254	            tipoDocumento,
+   255	            total: tipoDocumento === 'Factura' ? validItems.reduce((acc, i) => acc + (i.total || 0), 0) * (1 + (companyConfig.ivaVenta ?? 16) / 100) : validItems.reduce((acc, i) => acc + (i.total || 0), 0),
+   256	            items: validItems as SaleItem[],
+   257	            tasaAplicada: orderRate
+   258	          };
+   259	        }
+   260	        return s;
+   261	      });
+   262	      setSales(updatedSales);
+   263	      if (selectedSale?.id === editingSaleId) {
+   264	        setSelectedSale(updatedSales.find(s => s.id === editingSaleId) || null);
+   265	      }
+   266	    } else {
+   267	      const prefixPrecio = tipoPrecio === 'Mayorista' ? 'MA' : 'MI';
+   268	      const prefixPago = condicionPago === 'Contado' ? 'CO' : 'CR';
+   269	      const nextIdNumber = sequencesConfig.pedido || 1;
+   270	      const generatedId = `${prefixPrecio}${prefixPago}${nextIdNumber.toString().padStart(5, '0')}`;
+   271	      
+   272	      setSequencesConfig(prev => ({ ...prev, pedido: nextIdNumber + 1 }));
+   273	
+   274	      const newSale: Sale = {
+   275	        id: generatedId,
+   276	        fecha: new Date().toISOString(),
+   277	        fechaEstado: new Date().toISOString(),
+   278	        auditLog: [{ date: new Date().toISOString(), action: 'Creado', by: userRole?.nombre || 'Sistema', details: '' }],
+   279	        clienteId: orderClient.rif || '',
+   280	        clienteNombre: orderClient.razonSocial || 'CLIENTE NUEVO',
+   281	        estado: 'Registrado/Cotizacion',
+   282	        tipoUbicacion,
+   283	        condicionPago,
+   284	        tipoDocumento,
+   285	        tipoPrecio,
+   286	        total: tipoDocumento === 'Factura' ? validItems.reduce((acc, i) => acc + (i.total || 0), 0) * (1 + (companyConfig.ivaVenta ?? 16) / 100) : validItems.reduce((acc, i) => acc + (i.total || 0), 0),
+   287	        items: validItems as SaleItem[],
+   288	        tasaAplicada: orderRate
+   289	      };
+   290	      setSales([newSale, ...sales]);
+   291	    }
+   292	    setIsModalOpen(false);
+   293	    setEditingSaleId(null);
+   294	  };
+   295	
+   296	  const handleCloseSaleSubmit = (e: React.FormEvent) => {
+   297	    e.preventDefault();
+   298	    if (!closingSale) return;
+   299	    const amountPaid = Number(closingData.amountToPay);
+   300	    if (isNaN(amountPaid) || amountPaid < 0) {
+   301	      setClosingError("Ingrese un monto válido a cobrar.");
+   302	      return;
+   303	    }
+   304	    if (closingSale.condicionPago === 'Contado') {
+   305	      if (Math.abs(amountPaid - closingSale.total) > 0.01) {
+   306	        setClosingError("En ventas de contado el monto a cobrar debe ser exacto al total de la venta en USD ($" + closingSale.total.toFixed(2) + ").");
+   307	        return;
+   308	      }
+   309	    } else {
+   310	      if (amountPaid > closingSale.total + 0.01) {
+   311	        setClosingError("El monto a cobrar no puede ser mayor al total de la venta.");
+   312	        return;
+   313	      }
+   314	    }
+   315	    
+   316	    let finalUpdatedSale: Sale | null = null;
+   317	    
+   318	    setSales(prev => prev.map(s => {
+   319	      if (s.id === closingSale.id) {
+   320	        // Handle inventory for Minorista that goes directly from Registrado/Cotizacion to Cerrado
+   321	        if (s.estado === 'Registrado/Cotizacion' && s.tipoPrecio === 'Minorista') {
+   322	          const updatedInventory = [...inventory];
+   323	          s.items.forEach(item => {
+   324	            const prodIndex = updatedInventory.findIndex(p => p.codigo === item.codigo);
+   325	            if (prodIndex >= 0) {
+   326	              const qtyToDeduct = item.esEmpaque ? item.cantidad : (item.cantidad / (item.unidadesPorEmpaque || 1));
+   327	              updatedInventory[prodIndex] = {
+   328	                ...updatedInventory[prodIndex],
+   329	                stockDisp: updatedInventory[prodIndex].stockDisp - qtyToDeduct
+   330	              };
+   331	            }
+   332	          });
+   333	          setInventory(updatedInventory);
+   334	        } else if (s.estado === 'Confirmado' && s.tipoPrecio === 'Mayorista') {
+   335	          const updatedInventory = [...inventory];
+   336	          s.items.forEach(item => {
+   337	            const prodIndex = updatedInventory.findIndex(p => p.codigo === item.codigo);
+   338	            if (prodIndex >= 0) {
+   339	              updatedInventory[prodIndex] = {
+   340	                ...updatedInventory[prodIndex],
+   341	                stockComp: Math.max(0, (updatedInventory[prodIndex].stockComp || 0) - item.cantidad)
+   342	              };
+   343	            }
+   344	          });
+   345	          setInventory(updatedInventory);
+   346	        }
+   347	        
+   348	        const targetStatus = closingSale.tipoPrecio === 'Mayorista' ? ('Entregado' as SaleStatus) : ('Cerrado' as SaleStatus);
+   349	        
+   350	        const updatedSale = {
+   351	           ...s,
+   352	           estado: targetStatus,
+   353	           montoPagado: amountPaid,
+   354	           tasaAplicada: closingData.tasa,
+   355	           fechaEstado: new Date().toISOString(),
+   356	           auditLog: [...(s.auditLog || []), { date: new Date().toISOString(), action: closingSale.tipoPrecio === 'Mayorista' ? 'Entregado y Cobrado' : 'Cerrado' }]
+   357	        };
+   358	        
+   359	        if (selectedSale?.id === s.id) {
+   360	          setSelectedSale(updatedSale);
+   361	        }
+   362	        finalUpdatedSale = updatedSale;
+   363	        return updatedSale;
+   364	      }
+   365	      return s;
+   366	    }));
+   367	    
+   368	    setIsClosingModalOpen(false);
+   369	    setClosingSale(null);
+   370	    alert(`Venta cerrada exitosamente. ${amountPaid < closingSale.total ? 'El saldo restante irá a Cuentas por Cobrar.' : 'Total pagado en su totalidad.'}`);
+   371	    if (finalUpdatedSale) {
+   372	      setTimeout(() => generateDocument(finalUpdatedSale!, selectedSale, setSelectedSale), 100);
+   373	    }
+   374	  };
+   375	
+   376	  const modalState = {
+   377	    isModalOpen, setIsModalOpen, editingSaleId, setEditingSaleId,
+   378	    orderClient, setOrderClient, orderItems, setOrderItems,
+   379	    tipoUbicacion, setTipoUbicacion, condicionPago, setCondicionPago,
+   380	    tipoPrecio, setTipoPrecio, orderRate, setOrderRate, orderCurrency, setOrderCurrency,
+   381	    tipoDocumento, setTipoDocumento, handleSaveOrder, calculateBs, clients, inventory,
+   382	    minoristaRate, activeRate, rates, formatBs, handleItemChange, handleAddItem, handleRemoveItem, canEditPrice,
+   383	    isClosingModalOpen, setIsClosingModalOpen, closingSale, setClosingSale,
+   384	    closingData, setClosingData, closingError, setClosingError, handleCloseSaleSubmit,
+   385	    companyConfig
+   386	  };
+   387	
+   388	  return (
+   389	    <div className="h-full flex flex-col bg-[#F8FAFC]">
+   390	
+   391	      {/* Header */}
+   392	      <div className="px-4 py-3 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+   393	        <div>
+   394	          <h1 className="text-xl font-black text-[#0B1120] font-montserrat tracking-tight">Ventas y Pedidos</h1>
+   395	          <p className="text-[10px] text-gray-500 font-medium">Gestiona órdenes, despachos y cobranza.</p>
+   396	        </div>
+   397	        <div className="flex gap-2">
+   398	          <button 
+   399	            onClick={openNewOrder}
+   400	            className="bg-[#2563EB] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 hover:bg-blue-700 transition-all shadow-sm shadow-blue-500/20 font-montserrat uppercase tracking-wider"
+   401	          >
+   402	            <Plus className="w-4 h-4" /> Nuevo Pedido
+   403	          </button>
+   404	        </div>
+   405	      </div>
+   406	
+   407	      <div className="flex flex-1 overflow-hidden">
+   408	        {/* Main List */}
+   409	        <div className={`flex flex-col flex-1 border-r border-gray-200 ${selectedSale ? 'hidden lg:flex lg:max-w-md xl:max-w-lg' : 'flex'}`}>
+   410	          <div className="p-3 bg-white border-b border-gray-200 shrink-0">
+   411	            <div className="relative mb-3">
+   412	              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+   413	                <Search className="h-4 w-4 opacity-40" />
+   414	              </div>
+   415	              <input
+   416	                type="text"
+   417	                value={searchTerm}
+   418	                onChange={(e) => setSearchTerm(e.target.value)}
+   419	                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-xs bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition-all"
+   420	                placeholder="Buscar pedido o cliente..."
+   421	              />
+   422	            </div>
+   423	            
+   424	            <div className="flex flex-wrap gap-1">
+   425	              {['Todos', 'Registrado/Cotizacion', 'Confirmado', 'Cerrado'].map(tab => (
+   426	                <button
+   427	                  key={tab}
+   428	                  onClick={() => setActiveTab(tab as any)}
+   429	                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors border ${
+   430	                    activeTab === tab 
+   431	                      ? 'bg-[#0B1120] text-white border-[#0B1120]' 
+   432	                      : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+   433	            `}
+   434	                >
+   435	                  {tab}
+   436	                </button>
+   437	              ))}
+   438	            </div>
+   439	          </div>
+   440	
+   441	          <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+   442	            <div className="flex flex-col gap-2">
+   443	              {filteredSales.length === 0 ? (
+   444	                <div className="text-center p-8 text-gray-400 text-sm font-medium">No hay pedidos que coincidan con la búsqueda.</div>
+   445	              ) : (
+   446	                filteredSales.map(sale => (
+   447	                  <div 
+   448	                    key={sale.id}
+   449	                    onClick={() => setSelectedSale(sale)}
+   450	                    className={`bg-white border rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${selectedSale?.id === sale.id ? 'border-[#2563EB] shadow-sm ring-1 ring-[#2563EB]/20' : 'border-gray-200'}`}
+   451	                  >
+   452	                    <div className="flex justify-between items-start mb-2">
+   453	                      <div className="font-mono text-xs font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded">{sale.id}</div>
+   454	                      {sale.anulado && <div className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded ml-1">ANULADO</div>}
+   455	                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${getStatusColor(sale.estado)}`}>
+   456	                        {getStatusIcon(sale.estado)} {sale.estado}
+   457	                      </div>
+   458	                    </div>
+   459	                    <div className="font-black text-sm text-[#0B1120] leading-tight mb-1 truncate">{sale.clienteNombre}</div>
+   460	                    <div className="flex justify-between items-end mt-3">
+   461	                      <div className="flex flex-col gap-1.5">
+   462	                        <div className="text-[10px] text-gray-500 font-medium">{new Date(sale.fecha).toLocaleDateString()} &middot; {sale.items.length} items</div>
+   463	                        <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 w-fit px-1.5 py-0.5 rounded border border-amber-100">
+   464	                          <Clock className="w-3 h-3" />
+   465	                          <span>{getDaysSince(sale.fechaEstado || sale.fecha)} en este estado</span>
+   466	                        </div>
+   467	                      </div>
+   468	                      <div className="text-sm font-black text-[#10B981]">${sale.total.toFixed(2)}</div>
+   469	                    </div>
+   470	                  </div>
+   471	                ))
+   472	              )}
+   473	            </div>
+   474	          </div>
+   475	        </div>
+   476	
+   477	        {/* Detail View */}
+   478	        {selectedSale ? (
+   479	          <div className="flex-1 flex flex-col bg-[#F8FAFC] overflow-hidden relative">
+   480	            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6">
+   481	              <button onClick={() => setSelectedSale(null)} className="lg:hidden mb-4 text-sm font-bold text-gray-500 hover:text-[#2563EB] flex items-center gap-1 transition-colors"><ArrowLeft className="w-4 h-4" /> Volver a Pedidos</button>
+   482	              
+   483	              <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start gap-4 mb-4">
+   484	                <div>
+   485	                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+   486	                    <h2 className="text-2xl font-black text-[#0B1120] font-mono">{selectedSale.id}</h2>
+   487	                    {selectedSale.numeroDocumento && (
+   488	                      <span className="text-sm font-bold text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+   489	                        {selectedSale.tipoDocumento === 'Factura' ? 'Factura' : 'Nota'} #{selectedSale.numeroDocumento}
+   490	                      </span>
+   491	                    )}
+   492	                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(selectedSale.estado)}`}>
+   493	                      {getStatusIcon(selectedSale.estado)} {selectedSale.estado}
+   494	                    </div>
+   495	                  </div>
+   496	                  <div className="text-sm font-bold text-gray-600">{new Date(selectedSale.fecha).toLocaleString()}</div>
+   497	                </div>
+   498	                
+   499	                <div className="flex flex-wrap items-center gap-2">
+   500	                  {canPrintDocument(selectedSale) && (
+   501	                    <button 
+   502	                      onClick={() => generateDocument(selectedSale, selectedSale, setSelectedSale)}
+   503	                      className="bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"
+   504	                      title="Imprimir Documento"
+   505	                    >
+   506	                      <FileText className="w-3.5 h-3.5" /> {selectedSale.numeroDocumento ? 'Ver Documento' : 'Generar PDF'}
+   507	                    </button>
+   508	                  )}
+   509	                  {selectedSale.estado !== 'Cerrado' && (
+   510	                    <button 
+   511	                      onClick={() => handleDeleteSale(selectedSale.id)}
+   512	                      className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-all border border-red-100"
+   513	                      title="Eliminar pedido y reversar inventario"
+   514	                    >
+   515	                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+   516	                    </button>
+   517	                  )}
+   518	                  {getNextStatusAction(selectedSale) && (
+   519	                    <button 
+   520	                      onClick={() => advanceStatus(selectedSale.id)}
+   521	                      className="bg-[#0B1120] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-800 transition-all shadow-sm"
+   522	                    >
+   523	                      {getNextStatusAction(selectedSale)} <ArrowRight className="w-3.5 h-3.5" />
+   524	                    </button>
+   525	                  )}
+   526	                </div>
+   527	              </div>
+   528	              
+   529	              {selectedSale.anulado && <div className="bg-red-600 text-white font-black text-center py-2 px-4 rounded-xl mb-4 uppercase tracking-wider text-sm">ANULADO POR {selectedSale.anuladoPor?.toUpperCase()}</div>}
+   530	
+   531	              {/* Unified Document Block */}
+   532	              <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col mb-6">
+   533	                 
+   534	                 {/* Top Section: Client condensed */}
+   535	                 <div className="p-4 border-b border-gray-100 flex justify-between items-start sm:items-center bg-gray-50/50 flex-col sm:flex-row gap-3">
+   536	                    <div>
+   537	                      <div className="flex items-center gap-2">
+   538	                        <h3 className="text-sm font-black text-[#0B1120] uppercase tracking-wider">{selectedSale.clienteNombre}</h3>
+   539	                        {selectedSale.estado !== 'Cerrado' && (
+   540	                           <button onClick={() => handleEditSale(selectedSale)} className="p-1 hover:bg-gray-200 text-gray-500 rounded transition-colors" title="Editar Pedido">
+   541	                              <FileEdit className="w-3.5 h-3.5" />
+   542	                           </button>
+   543	                        )}
+   544	                      </div>
+   545	                      <div className="text-[10px] text-gray-500 font-bold mt-0.5 uppercase tracking-wider">
+   546	                         RIF: {clients.find(c => c.id === selectedSale.clienteId)?.rif || selectedSale.clienteId} • {clients.find(c => c.id === selectedSale.clienteId)?.telefono || 'S/N'}
+   547	                      </div>
+   548	                    </div>
+   549	                    <div className="flex flex-row sm:flex-col items-start sm:items-end gap-1">
+   550	                       <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[9px] font-bold uppercase">{selectedSale.tipoPrecio}</span>
+   551	                       <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[9px] font-bold uppercase">{selectedSale.condicionPago}</span>
+   552	                    </div>
+   553	                 </div>
+   554	
+   555	                 {/* Articles Table */}
+   556	                 <div className="overflow-x-auto">
+   557	                    <table className="w-full text-left text-xs">
+   558	                      <thead className="bg-[#F8FAFC] border-b border-gray-200 text-gray-500 uppercase font-bold text-[9px] tracking-wider">
+   559	                        <tr>
+   560	                          <th className="px-3 py-2">Código</th>
+   561	                          <th className="px-3 py-2">Descripción</th>
+   562	                          <th className="px-3 py-2 text-right">Cant.</th>
+   563	                          <th className="px-3 py-2 text-right">P. Unit</th>
+   564	                          <th className="px-3 py-2 text-right text-[#0B1120]">Total</th>
+   565	                        </tr>
+   566	                      </thead>
+   567	                      <tbody className="divide-y divide-gray-100">
+   568	                        {selectedSale.items.map((item, idx) => (
+   569	                          <tr key={idx} className="hover:bg-gray-50 transition-colors">
+   570	                            <td className="px-3 py-2 font-mono font-bold text-[#2563EB]">{item.codigo}</td>
+   571	                            <td className="px-3 py-2 min-w-[200px]">
+   572	                              <div className="font-medium text-gray-800">{item.detalle}</div>
+   573	                              <div className="text-[9px] text-gray-400 mt-0.5">{item.marcaRepuesto} &middot; {item.marcaVehiculo}</div>
+   574	                            </td>
+   575	                            <td className="px-3 py-2 text-right font-bold text-gray-600">{item.cantidad}</td>
+   576	                            <td className="px-3 py-2 text-right text-gray-600">${item.precio.toFixed(2)}</td>
+   577	                            <td className="px-3 py-2 text-right font-black text-[#10B981]">${item.total.toFixed(2)}</td>
+   578	                          </tr>
+   579	                        ))}
+   580	                      </tbody>
+   581	                    </table>
+   582	                 </div>
+   583	
+   584	                 {/* Totals Section */}
+   585	                 <div className="p-4 bg-gray-50/50 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-end gap-6 shrink-0">
+   586	                    {selectedSale.tipoDocumento === 'Factura' && (
+   587	                      <div className="flex items-center justify-end gap-6">
+   588	                        <div className="flex flex-col text-right">
+   589	                          <span className="text-[9px] font-bold text-gray-500 uppercase">Subtotal</span>
+   590	                          <span className="text-sm font-bold text-gray-700">${(selectedSale.total / (1 + (companyConfig.ivaVenta ?? 16) / 100)).toFixed(2)}</span>
+   591	                        </div>
+   592	                        <div className="flex flex-col text-right">
+   593	                          <span className="text-[9px] font-bold text-gray-500 uppercase">IVA ({companyConfig.ivaVenta ?? 16}%)</span>
+   594	                          <span className="text-sm font-bold text-gray-700">${(selectedSale.total - (selectedSale.total / (1 + (companyConfig.ivaVenta ?? 16) / 100))).toFixed(2)}</span>
+   595	                        </div>
+   596	                      </div>
+   597	                    )}
+   598	                    <div className="flex flex-col text-right sm:pl-6 sm:border-l sm:border-gray-200 mt-2 sm:mt-0">
+   599	                      <span className="text-[9px] font-bold text-gray-500 uppercase">Total {selectedSale.tipoDocumento === 'Factura' ? '(con IVA)' : ''}</span>
+   600	                      <div className="flex items-baseline gap-2 justify-end">
+   601	                        <span className="text-2xl font-black text-[#10B981] leading-none">${selectedSale.total.toFixed(2)}</span>
+   602	                        <span className="text-[10px] font-bold text-gray-400">Bs. {(selectedSale.total * (selectedSale.tasaAplicada || 1)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+   603	                      </div>
+   604	                    </div>
+   605	                 </div>
+   606	              </div>
+   607	              
+   608	              <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+   609	                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Auditoría</h4>
+   610	                <div className="space-y-1">
+   611	                  {selectedSale.auditLog?.map((log, idx) => (
+   612	                    <div key={idx} className="flex gap-4 text-[10px]">
+   613	                      <span className="text-gray-400 min-w-[120px] font-mono">{new Date(log.date).toLocaleString('es-VE')}</span>
+   614	                      <span className="text-gray-700 font-medium">{log.action}</span>
+   615	                    </div>
+   616	                  )) || <div className="text-[10px] text-gray-400 italic">No hay registros de auditoría</div>}
+   617	                </div>
+   618	              </div>
+   619	                                      </div>
+   620	          </div>
+   621	        ) : (
+   622	          <div className="hidden lg:flex flex-1 items-center justify-center bg-gray-50">
+   623	            <div className="text-center">
+   624	              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center shadow-sm border border-gray-100 mx-auto mb-4">
+   625	                <CheckCircle2 className="w-8 h-8 text-gray-300" />
+   626	              </div>
+   627	              <h3 className="text-lg font-black text-gray-400">Selecciona un pedido</h3>
+   628	              <p className="text-xs text-gray-400 mt-1">El detalle de la orden aparecerá aquí.</p>
+   629	            </div>
+   630	          </div>
+   631	        )}
+   632	      </div>
+   633	
+   634	      {/* Nuevo Pedido Modal */}
+   635	      {isModalOpen && <NewOrderModal state={modalState} />}
+   636	
+   637	
+   638	      {/* Closing Modal */}
+   639	      {isClosingModalOpen && closingSale && <CloseSaleModal state={modalState} />}
+   640	
+   641	
+   642	    </div>
+   643	  );
+   644	}

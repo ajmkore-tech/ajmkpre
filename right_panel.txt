@@ -1,0 +1,156 @@
+        {/* Detail View */}
+        {selectedSale ? (
+          <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+            
+
+            <div className="p-6 border-b border-gray-100 shrink-0 bg-[#F8FAFC]">
+              {selectedSale.anulado && <div className="bg-red-600 text-white font-black text-center py-2 px-4 rounded-xl mb-4 uppercase tracking-wider text-sm">ANULADO POR {selectedSale.anuladoPor?.toUpperCase()}</div>}
+                <button onClick={() => setSelectedSale(null)} className="lg:hidden mb-4 text-sm font-bold text-gray-500 hover:text-[#2563EB] flex items-center gap-1 transition-colors"><ArrowLeft className="w-4 h-4" /> Volver a Pedidos</button>
+                <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-2xl font-black text-[#0B1120] font-mono">{selectedSale.id}</h2>
+                    {selectedSale.numeroDocumento && (
+                      <span className="text-sm font-bold text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+                        {selectedSale.tipoDocumento === 'Factura' ? 'Factura' : 'Nota'} #{selectedSale.numeroDocumento}
+                      </span>
+                    )}
+                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(selectedSale.estado)}`}>
+                      {getStatusIcon(selectedSale.estado)} {selectedSale.estado}
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-gray-600">{new Date(selectedSale.fecha).toLocaleString()}</div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {canPrintDocument(selectedSale) && (
+                    <button 
+                      onClick={() => generateDocument(selectedSale)}
+                      className="bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"
+                      title="Imprimir Documento"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> {selectedSale.numeroDocumento ? 'Ver Documento' : 'Generar PDF'}
+                    </button>
+                  )}
+                  {selectedSale.estado !== 'Cerrado' && (
+                    <button 
+                      onClick={() => handleDeleteSale(selectedSale.id)}
+                      className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-red-100 transition-all border border-red-100"
+                      title="Eliminar pedido y reversar inventario"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                    </button>
+                  )}
+                  {getNextStatusAction(selectedSale) && (
+                    <button 
+                      onClick={() => advanceStatus(selectedSale.id)}
+                      className="bg-[#0B1120] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-800 transition-all shadow-sm"
+                    >
+                      {getNextStatusAction(selectedSale)} <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative group">
+                 {selectedSale.estado !== 'Cerrado' && (
+                 <button onClick={() => handleEditSale(selectedSale)} className="absolute top-3 right-3 p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" title="Editar Pedido">
+                    <FileEdit className="w-4 h-4" />
+                 </button>
+                 )}
+                <h3 className="text-sm font-black text-[#0B1120]">{selectedSale.clienteNombre}</h3>
+                <ClientDetails clientId={selectedSale.clienteId} inlineData={selectedSale} />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="flex justify-between items-end mb-4">
+                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Detalle de Artículos ({selectedSale.items.length})</h3>
+                 {selectedSale.estado !== 'Cerrado' && (
+                 <button onClick={() => handleEditSale(selectedSale)} className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
+                    <FileEdit className="w-3.5 h-3.5" /> Editar Pedido
+                 </button>
+                 )}
+              </div>
+              
+              <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F8FAFC] border-b border-gray-200 text-gray-500 uppercase font-bold text-[9px] tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Código</th>
+                      <th className="px-4 py-3">Descripción</th>
+                      <th className="px-4 py-3 text-right">Cant.</th>
+                      <th className="px-4 py-3 text-right">P. Unit</th>
+                      <th className="px-4 py-3 text-right text-[#0B1120]">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {selectedSale.items.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-mono font-bold text-[#2563EB]">{item.codigo}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-800">{item.detalle}</div>
+                          <div className="text-[9px] text-gray-400 mt-0.5">{item.marcaRepuesto} &middot; {item.marcaVehiculo}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-gray-600">{item.cantidad}</td>
+                        <td className="px-4 py-3 text-right text-gray-600">${item.precio.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right font-black text-[#10B981]">${item.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-[#F8FAFC] shrink-0">
+              <div className="flex flex-col items-end max-w-sm ml-auto">
+                {selectedSale.tipoDocumento === 'Factura' && (
+                  <div className="w-full text-right mb-4">
+                    <div className="flex justify-between gap-8 text-sm font-bold text-gray-500 mb-1">
+                      <span>Subtotal:</span>
+                      <span>${(selectedSale.total / (1 + (companyConfig.ivaVenta ?? 16) / 100)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-8 text-sm font-bold text-gray-500 mb-2 border-b border-gray-200 pb-2">
+                      <span>IVA ({companyConfig.ivaVenta ?? 16}%):</span>
+                      <span>${(selectedSale.total - (selectedSale.total / (1 + (companyConfig.ivaVenta ?? 16) / 100))).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-between items-center w-full">
+                  <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Orden {selectedSale.tipoDocumento === 'Factura' ? '(con IVA)' : ''}</div>
+                  <div className="text-right">
+                    <div className="text-3xl font-black text-[#10B981] leading-none">${selectedSale.total.toFixed(2)}</div>
+                    <div className="text-xs font-bold text-gray-400 mt-1">Bs. {(selectedSale.total * (selectedSale.tasaAplicada || 1)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-white">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Auditoría</h4>
+              <div className="space-y-2">
+                {selectedSale.auditLog?.map((log, idx) => (
+                  <div key={idx} className="flex gap-4 text-xs">
+                    <span className="text-gray-400 min-w-[120px] font-mono">{new Date(log.date).toLocaleString('es-VE')}</span>
+                    <span className="text-gray-700 font-medium">{log.action}</span>
+                  </div>
+                )) || <div className="text-xs text-gray-400 italic">No hay registros de auditoría</div>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="hidden lg:flex flex-1 items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center shadow-sm border border-gray-100 mx-auto mb-4">
+                <CheckCircle2 className="w-8 h-8 text-gray-300" />
+              </div>
+              <h3 className="text-lg font-black text-gray-400">Selecciona un pedido</h3>
+              <p className="text-xs text-gray-400 mt-1">El detalle de la orden aparecerá aquí.</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Nuevo Pedido Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-[#0B1120]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

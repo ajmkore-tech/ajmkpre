@@ -1,0 +1,1 @@
+sed -i 's/(selectedClientOrders.find(o => o.id === selectedOrderId)?.total || 0)/((selectedClientOrders.find(o => o.id === selectedOrderId)?.total || 0) - (selectedClientOrders.find(o => o.id === selectedOrderId)?.montoPagado || 0))/g' src/pages/CxC.tsx

@@ -1,0 +1,1 @@
+sed -i '/case '"'"'Recibido'"'"': return '"'"'bg-purple-100 text-purple-800 border-purple-200'"'"';/a \      case '"'"'Pendiente por pagar'"'"': return '"'"'bg-orange-100 text-orange-800 border-orange-200'"'"';' src/pages/Sales.tsx

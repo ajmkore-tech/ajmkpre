@@ -1,0 +1,54 @@
+[
+  {
+    "id": "role_admin",
+    "name": "Administrador",
+    "modules": {
+      "inicio": true,
+      "inventario": true,
+      "ventas": true,
+      "clientes": true,
+      "compras": true,
+      "cxc": true,
+      "cxp": true,
+      "configuracion": true,
+      "reportes": true
+    },
+    "permissions": {
+      "ventas": {
+        "verPrecioMayorista": true,
+        "editarPrecio": true,
+        "editarTasa": true
+      },
+      "inventario": {
+        "verCostosUtilidad": true,
+        "editarCostos": true
+      }
+    }
+  },
+  {
+    "id": "role_vendedor",
+    "name": "Vendedor Externo",
+    "modules": {
+      "inicio": true,
+      "inventario": true,
+      "ventas": true,
+      "clientes": true,
+      "compras": false,
+      "cxc": false,
+      "cxp": false,
+      "configuracion": false,
+      "reportes": false
+    },
+    "permissions": {
+      "ventas": {
+        "verPrecioMayorista": true,
+        "editarPrecio": false,
+        "editarTasa": false
+      },
+      "inventario": {
+        "verCostosUtilidad": false,
+        "editarCostos": false
+      }
+    }
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "PED-0001",
+    "fecha": "2026-08-10T10:00:00.000Z",
+    "fechaEstado": "2026-08-15T12:00:00.000Z",
+    "clienteId": "12426982",
+    "clienteNombre": "ANA MARIA CASTILLO",
+    "condicionPago": "Crédito",
+    "tipoPrecio": "Mayorista",
+    "tipoUbicacion": "Local",
+    "estado": "Confirmado",
+    "items": [
+      {
+        "productoId": "1",
+        "codigo": "PROD-001",
+        "detalle": "Producto de prueba 1",
+        "cantidad": 5,
+        "precio": 10.50,
+        "total": 52.50
+      },
+      {
+        "productoId": "2",
+        "codigo": "PROD-002",
+        "detalle": "Producto de prueba 2",
+        "cantidad": 2,
+        "precio": 25.00,
+        "total": 50.00
+      }
+    ],
+    "total": 118.90,
+    "montoPagado": 0
+  },
+  {
+    "id": "PED-0002",
+    "fecha": "2026-08-12T14:30:00.000Z",
+    "fechaEstado": "2026-08-14T15:00:00.000Z",
+    "clienteId": "19449630",
+    "clienteNombre": "DARWIN SANCHEZ",
+    "condicionPago": "Crédito",
+    "tipoPrecio": "Minorista",
+    "tipoUbicacion": "Externo",
+    "estado": "Confirmado",
+    "items": [
+      {
+        "productoId": "3",
+        "codigo": "PROD-003",
+        "detalle": "Producto de prueba 3",
+        "cantidad": 10,
+        "precio": 15.00,
+        "total": 150.00
+      }
+    ],
+    "total": 174.00,
+    "montoPagado": 50.00
+  },
+  {
+    "id": "PED-0003",
+    "fecha": "2026-08-18T09:15:00.000Z",
+    "fechaEstado": "2026-08-18T10:30:00.000Z",
+    "clienteId": "297560572",
+    "clienteNombre": "NAZARENO EXPRESS, C.A. (DR. ENCOMIENDA)",
+    "condicionPago": "Crédito",
+    "tipoPrecio": "Mayorista",
+    "tipoUbicacion": "Local",
+    "estado": "Confirmado",
+    "items": [
+      {
+        "productoId": "1",
+        "codigo": "PROD-001",
+        "detalle": "Producto de prueba 1",
+        "cantidad": 20,
+        "precio": 10.50,
+        "total": 210.00
+      }
+    ],
+    "total": 243.60,
+    "montoPagado": 0
+  }
+]

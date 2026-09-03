@@ -1,0 +1,48 @@
+
+> react-example@0.0.0 lint
+> tsc --noEmit
+
+src/pages/Sales.tsx(215,1): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(271,7): error TS2657: JSX expressions must have one parent element.
+src/pages/Sales.tsx(292,31): error TS1005: '}' expected.
+src/pages/Sales.tsx(292,66): error TS1003: Identifier expected.
+src/pages/Sales.tsx(297,8): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(297,9): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(299,15): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/Sales.tsx(313,7): error TS1005: ')' expected.
+src/pages/Sales.tsx(314,5): error TS1109: Expression expected.
+src/pages/Sales.tsx(514,1): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(589,9): error TS1005: ',' expected.
+src/pages/Sales.tsx(591,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(593,4): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(601,9): error TS1005: ',' expected.
+src/pages/Sales.tsx(603,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(615,3): error TS1005: ',' expected.
+src/pages/Sales.tsx(624,6): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(708,33): error TS1005: '}' expected.
+src/pages/Sales.tsx(708,112): error TS1005: '...' expected.
+src/pages/Sales.tsx(708,217): error TS1003: Identifier expected.
+src/pages/Sales.tsx(713,40): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,45): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,58): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,64): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,69): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,76): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,89): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,96): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+src/pages/Sales.tsx(713,100): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,110): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,117): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,127): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,142): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,143): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,163): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,170): error TS1005: ',' expected.
+src/pages/Sales.tsx(713,173): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(713,174): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Sales.tsx(730,16): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Sales.tsx(733,9): error TS1005: ')' expected.
+src/pages/Sales.tsx(890,7): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(900,5): error TS1128: Declaration or statement expected.
+src/pages/Sales.tsx(901,3): error TS1109: Expression expected.
+src/pages/Sales.tsx(902,1): error TS1128: Declaration or statement expected.
